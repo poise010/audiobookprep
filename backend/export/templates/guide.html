@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  /* ── Page setup ── */
+  @page {
+    size: letter;
+    margin: 1in 1.1in 1in 1.1in;
+    @bottom-center {
+      content: counter(page);
+      font-family: 'Georgia', serif;
+      font-size: 10pt;
+      color: #888;
+    }
+  }
+  @page :first { @bottom-center { content: none; } }
+
+  /* ── Base typography ── */
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #1a1a1a;
+  }
+
+  h1 { font-size: 18pt; font-family: 'Gill Sans', 'Arial', sans-serif; font-weight: 600; color: #1a1a1a; margin-top: 0; }
+  h2 { font-size: 14pt; font-family: 'Gill Sans', 'Arial', sans-serif; font-weight: 600; color: #2a2a2a; margin-top: 1.4em; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  h3 { font-size: 12pt; font-family: 'Gill Sans', 'Arial', sans-serif; font-weight: 600; color: #333; margin-top: 1.2em; }
+
+  p { margin: 0.5em 0; }
+  ul { margin: 0.4em 0 0.4em 1.4em; }
+  li { margin: 0.2em 0; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 1.4em 0; }
+
+  /* ── Cover page ── */
+  .cover {
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 8in;
+    text-align: center;
+  }
+  .cover-brand {
+    font-family: 'Gill Sans', 'Arial', sans-serif;
+    font-size: 11pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 3em;
+  }
+  .cover-title {
+    font-size: 28pt;
+    font-family: 'Georgia', serif;
+    font-weight: normal;
+    color: #1a1a1a;
+    margin-bottom: 0.3em;
+    line-height: 1.2;
+  }
+  .cover-author {
+    font-size: 14pt;
+    font-family: 'Gill Sans', 'Arial', sans-serif;
+    color: #555;
+    margin-bottom: 2.5em;
+  }
+  .cover-subtitle {
+    font-size: 11pt;
+    font-family: 'Gill Sans', 'Arial', sans-serif;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 4em;
+  }
+  .cover-date {
+    font-size: 9pt;
+    color: #aaa;
+    font-family: 'Gill Sans', 'Arial', sans-serif;
+  }
+  .cover-rule {
+    width: 60px;
+    border: none;
+    border-top: 2px solid #1a1a1a;
+    margin: 1.5em auto;
+  }
+
+  /* ── Section breaks ── */
+  .section-page { page-break-before: always; }
+  .section-header {
+    font-family: 'Gill Sans', 'Arial', sans-serif;
+    font-size: 9pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 0.6em;
+  }
+  .section-title {
+    font-size: 22pt;
+    font-family: 'Georgia', serif;
+    font-weight: normal;
+    border-bottom: 2px solid #1a1a1a;
+    padding-bottom: 8px;
+    margin-bottom: 1.2em;
+  }
+
+  /* ── Pronunciation table ── */
+  .pron-category {
+    font-size: 11pt;
+    font-family: 'Gill Sans', 'Arial', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #333;
+    margin-top: 1.6em;
+    margin-bottom: 0.6em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 4px;
+  }
+  .pron-entry {
+    margin-bottom: 0.5em;
+    padding: 0.4em 0;
+    border-bottom: 1px dotted #eee;
+  }
+  .pron-word {
+    font-weight: bold;
+    font-size: 11pt;
+  }
+  .pron-phonetic {
+    font-style: italic;
+    color: #444;
+    margin-left: 0.3em;
+  }
+  .pron-rhymes {
+    color: #555;
+    margin-left: 0.3em;
+  }
+  .pron-source {
+    font-size: 8pt;
+    color: #999;
+    margin-left: 0.5em;
+  }
+  .pron-unverified {
+    color: #b94a48;
+    font-size: 9pt;
+  }
+  .pron-notes {
+    font-size: 9.5pt;
+    color: #555;
+    margin-top: 0.15em;
+    margin-left: 0.5em;
+  }
+  .pron-audio {
+    font-size: 9pt;
+    color: #2a7ae2;
+  }
+</style>
+</head>
+<body>
+
+<!-- Cover -->
+<div class="cover">
+  <div class="cover-brand">AudiobookPrep.com</div>
+  <div class="cover-title">{{ title }}</div>
+  {% if author %}<div class="cover-author">by {{ author }}</div>{% endif %}
+  <hr class="cover-rule">
+  <div class="cover-subtitle">Narrator Preparation Guide</div>
+  <div class="cover-date">Prepared {{ generated_date }}</div>
+</div>
+
+<!-- Plot Summary -->
+{% if sections.plot_summary %}
+<div class="section-page">
+  <div class="section-header">Section 1</div>
+  <div class="section-title">Plot Summary</div>
+  {{ sections.plot_summary }}
+</div>
+{% endif %}
+
+<!-- Character Breakdown -->
+{% if sections.character_breakdown %}
+<div class="section-page">
+  <div class="section-header">Section 2</div>
+  <div class="section-title">Character Breakdown</div>
+  {{ sections.character_breakdown }}
+</div>
+{% endif %}
+
+<!-- Perspective Guide -->
+{% if sections.perspective_guide %}
+<div class="section-page">
+  <div class="section-header">Section 3</div>
+  <div class="section-title">Perspective Guide</div>
+  {{ sections.perspective_guide }}
+</div>
+{% endif %}
+
+<!-- Chapter Summaries -->
+{% if sections.chapter_summary %}
+<div class="section-page">
+  <div class="section-header">Section 4</div>
+  <div class="section-title">Chapter-by-Chapter Summary</div>
+  {{ sections.chapter_summary }}
+</div>
+{% endif %}
+
+<!-- Pronunciation Guide -->
+<div class="section-page">
+  <div class="section-header">Section 5</div>
+  <div class="section-title">Pronunciation Guide</div>
+
+  {% if sections.pronunciation_guide %}
+    {{ sections.pronunciation_guide }}
+  {% endif %}
+
+  {% set cat_labels = {
+    'character_name': 'Character Names',
+    'place': 'Place Names',
+    'organization': 'Organizations',
+    'foreign': 'Foreign &amp; Invented Words',
+    'unusual': 'Unusual English Words'
+  } %}
+
+  {% for cat, entries in pron_by_category.items() %}
+    {% if entries %}
+    <div class="pron-category">{{ cat_labels.get(cat, cat) }}</div>
+    {% for entry in entries %}
+    <div class="pron-entry">
+      <span class="pron-word">{{ entry.word }}</span>
+      {% if entry.phonetic %}<span class="pron-phonetic">{{ entry.phonetic }}</span>{% endif %}
+      {% if entry.rhymes_with %}<span class="pron-rhymes">· sounds like: {{ entry.rhymes_with }}</span>{% endif %}
+      {% if entry.source and entry.verified %}<span class="pron-source">[{{ entry.source }}]</span>{% endif %}
+      {% if not entry.verified %}<span class="pron-unverified"> · pronunciation unconfirmed — research before recording</span>{% endif %}
+      {% if entry.audio_url %}<div class="pron-audio">Audio: {{ entry.audio_url }}</div>{% endif %}
+      {% if entry.notes %}<div class="pron-notes">{{ entry.notes }}</div>{% endif %}
+      {% if entry.context %}<div class="pron-notes"><em>Context: {{ entry.context }}</em></div>{% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+  {% endfor %}
+</div>
+
+</body>
+</html>
