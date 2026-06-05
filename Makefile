@@ -1,22 +1,23 @@
 .PHONY: install dev build seed-corpus clean
 
 install:
-	pip3 install -r requirements.txt
-	python3 -m spacy download en_core_web_sm
+	python3 -m venv .venv
+	.venv/bin/pip install -r requirements.txt
+	.venv/bin/python -m spacy download en_core_web_sm
 	cd frontend && npm install
 
 dev:
 	cd frontend && npm run dev &
-	uvicorn backend.main:app --reload --port 8000
+	.venv/bin/uvicorn backend.main:app --reload --port 8000
 
 build:
 	cd frontend && npm run build
 
 seed-corpus:
-	python3 seed_corpus.py
+	.venv/bin/python seed_corpus.py
 
 test:
-	pytest tests/ -v
+	.venv/bin/pytest tests/ -v
 
 clean:
-	rm -rf frontend/dist frontend/node_modules __pycache__ .pytest_cache
+	rm -rf frontend/dist frontend/node_modules __pycache__ .pytest_cache .venv
