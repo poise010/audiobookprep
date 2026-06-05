@@ -1,8 +1,8 @@
 .PHONY: install dev build seed-corpus clean
 
 install:
-	pip install -r requirements.txt
-	python -m spacy download en_core_web_sm
+	pip3 install -r requirements.txt
+	python3 -m spacy download en_core_web_sm
 	cd frontend && npm install
 
 dev:
@@ -13,7 +13,7 @@ build:
 	cd frontend && npm run build
 
 seed-corpus:
-	python seed_corpus.py
+	python3 seed_corpus.py
 
 test:
 	pytest tests/ -v
