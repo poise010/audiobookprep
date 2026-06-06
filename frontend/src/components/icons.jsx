@@ -9,6 +9,7 @@ export const IconUsers = (p) => <svg {...S} {...p}><path d="M16 21v-2a4 4 0 0 0-
 export const IconEye = (p) => <svg {...S} {...p}><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
 export const IconList = (p) => <svg {...S} {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
 export const IconMic = (p) => <svg {...S} {...p}><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2"/><path d="M12 19v3"/></svg>
+export const IconFlag = (p) => <svg {...S} {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
 export const IconDownload = (p) => <svg {...S} {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
 export const IconLibrary = (p) => <svg {...S} {...p}><path d="M16 6l4 14M12 6v14M8 8l-4 12"/><path d="M3 20h18"/></svg>
 export const IconRefresh = (p) => <svg {...S} {...p}><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
@@ -25,4 +26,5 @@ export const SECTION_ICONS = {
   perspective_guide: IconEye,
   chapter_summary: IconList,
   pronunciation_guide: IconMic,
+  flagged_items: IconFlag,
 }

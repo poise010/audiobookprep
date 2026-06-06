@@ -95,7 +95,7 @@ async def regenerate_section(
     job["sections"][section_key]["custom_instructions"] = custom_instructions
 
     from backend.generation.generator import (
-        _generate_section, _generate_chapter_summary, _generate_pronunciation
+        _generate_section, _generate_chapter_summary, _generate_pronunciation, _generate_flagged_items
     )
     from backend.rag.corpus import retrieve_examples
 
@@ -105,6 +105,8 @@ async def regenerate_section(
             await _generate_chapter_summary(job, job["chapters"], rag, custom_instructions)
         elif section_key == "pronunciation_guide":
             await _generate_pronunciation(job, rag, custom_instructions)
+        elif section_key == "flagged_items":
+            await _generate_flagged_items(job, rag, custom_instructions)
         else:
             await _generate_section(job, section_key, job["manuscript_text"], rag, custom_instructions)
 

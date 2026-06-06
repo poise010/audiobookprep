@@ -1,11 +1,9 @@
 """
-Parallel Claude API generation for all 5 guide sections.
+Parallel Claude API generation for all 6 guide sections.
 All sections are kicked off simultaneously via asyncio.gather.
 """
 import asyncio
-import json
 import uuid
-from pathlib import Path
 from datetime import datetime
 
 from anthropic import AsyncAnthropic
@@ -18,6 +16,7 @@ from backend.generation.prompts import (
     build_perspective_guide_prompt,
     build_chapter_summary_prompt,
     build_pronunciation_prompt,
+    build_flagged_items_prompt,
 )
 from backend.rag.corpus import retrieve_examples
 from backend.pronunciation.extractor import extract_candidates
@@ -35,6 +34,7 @@ SECTIONS = [
     "perspective_guide",
     "chapter_summary",
     "pronunciation_guide",
+    "flagged_items",
 ]
 
 
@@ -131,6 +131,7 @@ async def run_generation(job_id: str) -> None:
             _generate_section(job, "perspective_guide", manuscript_text, rag_context["perspective_guide"]),
             _generate_chapter_summary(job, chapters, rag_context["chapter_summary"]),
             _generate_pronunciation(job, rag_context["pronunciation_guide"]),
+            _generate_flagged_items(job, rag_context["flagged_items"]),
         )
 
         job["status"] = "ready"
@@ -172,7 +173,6 @@ async def _generate_chapter_summary(job: dict, chapters: list[dict], rag_example
                                     custom_instructions: str = "") -> None:
     job["sections"]["chapter_summary"]["status"] = "generating"
     try:
-        # For long books, generate chapter summaries in batches to stay within context
         if len(chapters) > 20:
             parts = []
             batch_size = 10
@@ -210,9 +210,20 @@ async def _generate_pronunciation(job: dict, rag_examples: list, custom_instruct
         job["sections"]["pronunciation_guide"]["error"] = str(e)
 
 
+async def _generate_flagged_items(job: dict, rag_examples: list, custom_instructions: str = "") -> None:
+    job["sections"]["flagged_items"]["status"] = "generating"
+    try:
+        system, user = build_flagged_items_prompt(job["manuscript_text"], rag_examples)
+        user = _append_instructions(user, custom_instructions)
+        content = await _call_claude(system, user)
+        job["sections"]["flagged_items"]["content"] = content
+        job["sections"]["flagged_items"]["status"] = "done"
+    except Exception as e:
+        job["sections"]["flagged_items"]["status"] = "error"
+        job["sections"]["flagged_items"]["error"] = str(e)
+
+
 async def _call_claude(system: str, user: str, max_tokens: int = 4096) -> str:
-    # Truncate very long manuscripts to Claude's practical limit
-    # Opus supports 200k tokens but we keep user message under ~150k tokens (~600k chars)
     if len(user) > 600_000:
         user = user[:600_000] + "\n\n[Manuscript truncated for length]"
 
@@ -230,14 +241,12 @@ async def _call_claude(system: str, user: str, max_tokens: int = 4096) -> str:
             return message.content[0].text
 
         except anthropic.BadRequestError as e:
-            # Billing, invalid model, oversized input — not retryable. Surface clearly.
             raise GenerationError(_friendly_error(e)) from e
         except anthropic.AuthenticationError as e:
             raise GenerationError(
                 "Anthropic API key is invalid or missing. Check ANTHROPIC_API_KEY in your .env file."
             ) from e
         except (anthropic.RateLimitError, anthropic.InternalServerError, anthropic.APIConnectionError) as e:
-            # Transient — retry with exponential backoff (2s, 4s, 8s)
             last_err = e
             if attempt < 3:
                 await asyncio.sleep(2 ** (attempt + 1))
@@ -265,7 +274,6 @@ def _friendly_error(e: "Exception") -> str:
         )
     if "max_tokens" in msg or "too long" in msg or "context" in msg:
         return "This manuscript is too long for a single request. Try a shorter excerpt."
-    # Fallback: strip the noisy prefix, keep the human-readable message
     raw = str(e)
     if "'message':" in raw:
         try:

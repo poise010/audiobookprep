@@ -14,6 +14,7 @@ SECTION_KEYS = [
     "perspective_guide",
     "chapter_summary",
     "pronunciation_guide",
+    "flagged_items",
 ]
 
 

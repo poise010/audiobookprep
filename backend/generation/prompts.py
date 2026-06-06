@@ -158,45 +158,69 @@ def build_pronunciation_prompt(
     rag_examples: list[dict],
 ) -> tuple[str, str]:
     system = VOICE_RULES + """
-TASK: Write the pronunciation guide section.
+TASK: Write a 2-3 sentence introduction for the pronunciation guide.
 
-You have been provided with a list of candidate words extracted from the manuscript,
-along with any verified phonetic data.
+This paragraph orients the narrator before they see the word list. Address:
+- What types of words dominate (character names, invented terms, foreign language, dialect)?
+- Any particular phonetic family or language the narrator should prepare for?
+- One piece of general guidance specific to this manuscript.
 
-Your job:
-1. Write a 2-3 sentence intro paragraph for the narrator (directorial tone — why this guide exists,
-   how to use it).
-2. Format each word entry as:
-   WORD — /IPA/ — "sounds like: ___" — [Source]
-   Optional: one sentence of context if it's a character name or place ("Saoirse is the protagonist")
-3. Group by type in this order:
-   - Character Names
-   - Place Names
-   - Foreign & Invented Words
-   - Unusual English Words
-4. For any word marked "unverified": write the word, note "(pronunciation unconfirmed)",
-   and advise the narrator to research before recording.
-
-INCLUDE ONLY: words a trained narrator might genuinely stumble on.
-EXCLUDE: any common English word a literate adult would know.
-EXCLUDE: words the narrator clearly knows how to say (Smith, London, California, etc.).
+Write exactly 2-3 sentences. No headers. No lists. Just a clear, useful paragraph.
+Do not list individual words — those appear in the table that follows your intro.
 """
     pron_lines = []
     for entry in pronunciation_data:
         word = entry.get("word", "")
-        phonetic = entry.get("phonetic", "")
-        rhymes = entry.get("rhymes_with", "")
-        source = entry.get("source", "unverified")
-        notes = entry.get("notes", "")
         category = entry.get("category", "unknown")
-        line = f"Word: {word} | Category: {category} | Phonetic: {phonetic or 'N/A'} | Rhymes: {rhymes or 'N/A'} | Source: {source} | Notes: {notes}"
+        phonetic = entry.get("phonetic", "")
+        verified = entry.get("verified", False)
+        line = f"Word: {word} | Type: {category} | Phonetic: {phonetic or 'unverified'} | Confirmed: {verified}"
         pron_lines.append(line)
 
+    count = len(pronunciation_data)
     user = (
         _rag_block(rag_examples)
-        + "PRONUNCIATION DATA:\n"
-        + "\n".join(pron_lines)
-        + "\n\nMANUSCRIPT EXCERPT (first 500 words for context):\n"
-        + manuscript_excerpt[:2000]
+        + f"WORD LIST ({count} candidates extracted from manuscript):\n"
+        + "\n".join(pron_lines[:60])
+        + "\n\nMANUSCRIPT EXCERPT (for context):\n"
+        + manuscript_excerpt[:1500]
     )
+    return system, user
+
+
+def build_flagged_items_prompt(manuscript_text: str, rag_examples: list[dict]) -> tuple[str, str]:
+    system = VOICE_RULES + """
+TASK: Identify items that require producer or director confirmation before recording begins.
+
+Flag ONLY genuinely ambiguous items — things where there is no clear right answer, and a
+deliberate choice must be made before the mic goes live. Do not flag things with obvious answers.
+If you find nothing in a category, skip that category entirely.
+
+Categories to check:
+
+**INVENTED OR PHONETICALLY UNCERTAIN WORDS**
+Proper nouns, invented words, or unusual names where the correct pronunciation is unclear
+from context or spelling. List each with one sentence of context and the specific uncertainty.
+
+**DIALECT & ACCENT SCOPE**
+Characters whose dialect is indicated but whose intensity is unspecified — the narrator
+must decide how broad or subtle. Include any accent requiring significant preparation
+(uncommon regional accents, code-switching characters, characters who shift register).
+
+**UNCONVENTIONAL STYLIZATION**
+Em dashes used ambiguously (interruption vs. trailing off?), unconventional capitalization,
+ALL CAPS passages (shouted vs. emphasis?), verse or song that requires a performance decision.
+Flag only where the notation is genuinely unclear.
+
+**TONAL AMBIGUITY**
+Passages where the emotional register is uncertain — the narrator must choose between
+sincerity and irony, comedy and tragedy, tenderness and detachment. Give chapter and a brief quote.
+
+Format each flagged item as:
+- **[Word or brief description]** — [What the ambiguity is] — [Recommendation if any]
+
+If this manuscript has no genuinely ambiguous items, write one sentence saying so.
+Keep the total response under 600 words. Quality over quantity.
+"""
+    user = _rag_block(rag_examples) + "MANUSCRIPT:\n\n" + manuscript_text[:50000]
     return system, user
