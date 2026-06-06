@@ -10,7 +10,12 @@ async function request(method, path, body, isFormData = false) {
       opts.body = JSON.stringify(body)
     }
   }
-  const res = await fetch(BASE + path, opts)
+  let res
+  try {
+    res = await fetch(BASE + path, opts)
+  } catch {
+    throw new Error('Could not reach the server. Make sure the backend is running, then try again.')
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))
     throw new Error(err.detail || 'Request failed')
