@@ -6,12 +6,36 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from backend.config import settings
 from backend.ingestion.pdf_parser import parse_pdf
 from backend.generation.generator import (
-    create_job, get_job, list_jobs, update_section, run_generation
+    create_job, create_pending_job, get_job, list_jobs, update_section, run_generation
 )
 from backend.export.pdf_generator import generate_pdf
 from backend.rag.corpus import ingest_guide, SECTION_KEYS
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
+
+
+async def _parse_and_generate(job_id: str, pdf_path: Path, title: str, author: str):
+    """Background pipeline: parse the PDF (off the event loop), then generate."""
+    from backend.generation.generator import (
+        populate_job_from_manuscript, run_generation, get_job
+    )
+    try:
+        # pdfplumber is slow and CPU-bound — run it in a thread so it never
+        # blocks the server's event loop.
+        manuscript = await asyncio.to_thread(parse_pdf, pdf_path)
+    except Exception as e:
+        job = get_job(job_id)
+        if job:
+            job["status"] = "error"
+            job["error"] = (
+                "We couldn't read this PDF. It may be a scanned image (no selectable "
+                f"text) or a corrupted file. Try a text-based PDF. [{e}]"
+            )
+        pdf_path.unlink(missing_ok=True)
+        return
+
+    populate_job_from_manuscript(job_id, manuscript, title, author)
+    await run_generation(job_id)
 
 
 @router.post("")
@@ -24,24 +48,15 @@ async def upload_and_create_job(
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, "Only PDF files are accepted")
 
-    # Save uploaded file
-    job_id_temp = f"upload_{id(file)}"
-    pdf_path = settings.uploads_dir / f"{job_id_temp}.pdf"
+    # Create the job shell first so we return immediately with a real id.
+    job = create_pending_job(title=title, author=author)
+
+    pdf_path = settings.uploads_dir / f"{job['id']}.pdf"
     pdf_path.write_bytes(await file.read())
 
-    try:
-        manuscript = parse_pdf(pdf_path)
-    except Exception as e:
-        pdf_path.unlink(missing_ok=True)
-        raise HTTPException(422, f"Could not parse PDF: {e}")
-
-    job = create_job(manuscript, title=title, author=author)
-
-    # Rename upload to job_id
-    final_path = settings.uploads_dir / f"{job['id']}.pdf"
-    pdf_path.rename(final_path)
-
-    background_tasks.add_task(run_generation, job["id"])
+    # Parse + generate happen in the background; the user lands on the
+    # progress view right away instead of waiting on the upload.
+    background_tasks.add_task(_parse_and_generate, job["id"], pdf_path, title, author)
 
     return {
         "job_id": job["id"],

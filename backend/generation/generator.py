@@ -65,6 +65,48 @@ def create_job(manuscript: ParsedManuscript, title: str = "", author: str = "") 
     return job
 
 
+def create_pending_job(title: str = "", author: str = "") -> dict:
+    """Create a job shell immediately, before the PDF is parsed.
+
+    Parsing happens in a background task so the upload request returns at once
+    and the user lands on the live progress view instead of a hung button.
+    """
+    job_id = str(uuid.uuid4())
+    job = {
+        "id": job_id,
+        "title": title or "Processing…",
+        "author": author,
+        "word_count": 0,
+        "page_count": 0,
+        "status": "parsing",
+        "created_at": datetime.utcnow().isoformat(),
+        "manuscript_text": "",
+        "chapters": [],
+        "sections": {s: {"status": "pending", "content": ""} for s in SECTIONS},
+        "pronunciation_entries": [],
+    }
+    _jobs[job_id] = job
+    return job
+
+
+def populate_job_from_manuscript(job_id: str, manuscript: ParsedManuscript,
+                                 title: str = "", author: str = "") -> None:
+    """Fill in a pending job once its PDF has been parsed."""
+    job = _jobs.get(job_id)
+    if not job:
+        return
+    job["title"] = title or manuscript.title
+    if author:
+        job["author"] = author
+    job["word_count"] = manuscript.word_count
+    job["page_count"] = manuscript.page_count
+    job["manuscript_text"] = manuscript.full_text
+    job["chapters"] = [
+        {"title": c.title, "index": c.index, "text": c.text}
+        for c in manuscript.chapters
+    ]
+
+
 def get_job(job_id: str) -> dict | None:
     return _jobs.get(job_id)
 

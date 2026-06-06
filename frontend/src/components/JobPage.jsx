@@ -15,7 +15,7 @@ const META = {
 }
 
 const ORDER = Object.keys(META)
-const ACTIVE = new Set(['pending', 'generating'])
+const ACTIVE = new Set(['parsing', 'pending', 'generating'])
 
 function ProgressCard({ sectionKey, data, index }) {
   const Icon = SECTION_ICONS[sectionKey]
@@ -125,7 +125,11 @@ export default function JobPage({ onJobUpdated }) {
         <div>
           <div className="generating-notice">
             <Waveform />
-            <span>Writing your guide — all six sections run in parallel. This takes 2–5 minutes depending on manuscript length.</span>
+            <span>
+              {job.status === 'parsing'
+                ? 'Reading your manuscript — extracting the text and finding chapter breaks…'
+                : 'Writing your guide — all six sections run in parallel. This takes 2–5 minutes depending on manuscript length.'}
+            </span>
           </div>
           <div className="stack">
             {ORDER.map((k, i) => (

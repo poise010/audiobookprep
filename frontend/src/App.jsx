@@ -5,7 +5,7 @@ import UploadPage from './components/UploadPage'
 import JobPage from './components/JobPage'
 import { IconPlus } from './components/icons'
 
-const ACTIVE = new Set(['pending', 'generating'])
+const ACTIVE = new Set(['parsing', 'pending', 'generating'])
 
 function Sidebar({ jobs, onNewJob }) {
   const navigate = useNavigate()
