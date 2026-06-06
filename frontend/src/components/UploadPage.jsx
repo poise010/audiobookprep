@@ -31,10 +31,14 @@ export default function UploadPage({ onJobCreated }) {
 
   return (
     <div>
-      <h1 className="h-page">New Narrator Guide</h1>
-      <p className="text-sub" style={{ marginTop: 6, marginBottom: 32 }}>
-        Upload a manuscript PDF. All five guide sections generate in parallel.
-      </p>
+      <div className="page-head">
+        <div className="eyebrow">New Preparation Guide</div>
+        <h1 className="h-page">Brief the booth.</h1>
+        <p className="text-sub">
+          Drop in a manuscript and the studio writes all six sections in parallel —
+          plot, characters, perspective, chapter notes, pronunciation, and items flagged for your discretion.
+        </p>
+      </div>
 
       <div
         className={`upload-zone ${dragOver ? 'drag-over' : ''}`}
@@ -75,7 +79,7 @@ export default function UploadPage({ onJobCreated }) {
       )}
 
       {file && (
-        <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
+        <div className="upload-actions">
           <button className="btn btn-accent" onClick={handleSubmit} disabled={loading}>
             {loading ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Uploading…</> : <><IconSparkle width={16} height={16} /> Generate Guide</>}
           </button>

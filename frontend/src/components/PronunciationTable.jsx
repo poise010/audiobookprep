@@ -1,3 +1,5 @@
+import { Fragment } from 'react'
+
 const CAT_LABELS = {
   character_name: 'Character Names',
   place: 'Place Names',
@@ -45,19 +47,19 @@ export default function PronunciationTable({ entries }) {
               </thead>
               <tbody>
                 {items.map((e, i) => (
-                  <>
-                    <tr key={i}>
+                  <Fragment key={i}>
+                    <tr>
                       <td><strong>{e.word}</strong></td>
                       <td>{e.phonetic || '—'}</td>
                       <td>{e.rhymes_with || '—'}</td>
                       <td className="pron-source-cell">{e.source || '—'}</td>
                     </tr>
                     {e.notes && (
-                      <tr key={`${i}-note`}>
+                      <tr>
                         <td colSpan={4} className="pron-note-cell">{e.notes}</td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>

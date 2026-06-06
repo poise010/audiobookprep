@@ -14,8 +14,13 @@ function Sidebar({ jobs, onNewJob }) {
   return (
     <nav className="sidebar">
       <div className="sidebar-logo" onClick={() => navigate('/')}>
-        <div className="sidebar-logo-mark">Audiobook<b>Prep</b></div>
-        <div className="sidebar-logo-sub">Guide Generator</div>
+        <div className="sidebar-logo-eq" aria-hidden="true">
+          <span /><span /><span /><span />
+        </div>
+        <div className="sidebar-logo-text">
+          <div className="sidebar-logo-mark">Audiobook<b>Prep</b></div>
+          <div className="sidebar-logo-sub">Narrator Studio</div>
+        </div>
       </div>
 
       <button className="sidebar-new-btn" onClick={onNewJob}>
@@ -28,10 +33,11 @@ function Sidebar({ jobs, onNewJob }) {
         {jobs.length === 0 && (
           <div className="job-list-empty">No guides yet</div>
         )}
-        {jobs.map(job => (
+        {jobs.map((job, i) => (
           <div
             key={job.id}
             className={`job-item ${job.id === jobId ? 'active' : ''}`}
+            style={{ animationDelay: `${0.14 + i * 0.04}s` }}
             onClick={() => navigate(`/jobs/${job.id}`)}
           >
             <div className="job-item-title">{job.title || 'Untitled'}</div>

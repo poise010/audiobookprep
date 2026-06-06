@@ -1,6 +1,6 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { SECTION_ICONS, IconAlert } from './icons'
+import { SECTION_ICONS, IconAlert, IconFlag } from './icons'
 import PronunciationTable from './PronunciationTable'
 
 const ACTIVE = new Set(['pending', 'generating'])
@@ -47,6 +47,15 @@ export default function SectionView({ sectionKey, meta, content, status, pronunc
           </div>
         ) : (
           <div className={`prose${sectionKey === 'flagged_items' ? ' prose--flagged' : ''}`}>
+            {sectionKey === 'flagged_items' && (
+              <div className="flagged-callout">
+                <IconFlag width={18} height={18} />
+                <div className="flagged-callout-text">
+                  These items could not be definitively resolved and should be confirmed
+                  before recording. They are not errors — they are decisions that belong to the director.
+                </div>
+              </div>
+            )}
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{content || ''}</ReactMarkdown>
             {sectionKey === 'pronunciation_guide' && (
               <PronunciationTable entries={pronunciationEntries || []} />

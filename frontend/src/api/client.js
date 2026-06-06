@@ -38,35 +38,8 @@ export const api = {
     return res.json()
   },
 
-  async saveSection(jobId, sectionKey, content) {
-    const res = await request('PUT', `/jobs/${jobId}/sections/${sectionKey}`, { content })
-    return res.json()
-  },
-
-  async regenerateSection(jobId, sectionKey, customInstructions = '') {
-    const res = await request('POST', `/jobs/${jobId}/sections/${sectionKey}/regenerate`, {
-      custom_instructions: customInstructions,
-    })
-    return res.json()
-  },
-
   async exportPdf(jobId) {
     const res = await request('POST', `/jobs/${jobId}/export`)
     return res.blob()
-  },
-
-  async saveToCorpus(jobId, genre = 'fiction') {
-    const res = await request('POST', `/jobs/${jobId}/save-to-corpus`, { genre })
-    return res.json()
-  },
-
-  async getLibrary() {
-    const res = await request('GET', '/library')
-    return res.json()
-  },
-
-  async deleteFromLibrary(guideId) {
-    const res = await request('DELETE', `/library/${guideId}`)
-    return res.json()
   },
 }

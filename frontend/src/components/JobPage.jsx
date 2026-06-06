@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import SectionView from './SectionView'
+import Waveform from './Waveform'
 import { SECTION_ICONS, IconCheck, IconAlert, IconDownload, IconClock } from './icons'
 
 const META = {
@@ -16,26 +17,29 @@ const META = {
 const ORDER = Object.keys(META)
 const ACTIVE = new Set(['pending', 'generating'])
 
-function ProgressCard({ sectionKey, data }) {
+function ProgressCard({ sectionKey, data, index }) {
   const Icon = SECTION_ICONS[sectionKey]
   const { status } = data
-  const cls = status === 'done' ? 'is-done' : status === 'error' ? 'is-error' : ''
+  const cls = status === 'done' ? 'is-done'
+    : status === 'error' ? 'is-error'
+    : status === 'generating' ? 'is-active' : ''
   return (
-    <div className={`card progress-card ${cls}`}>
+    <div className={`card progress-card ${cls}`} style={{ animationDelay: `${index * 0.06}s` }}>
       <div className="pc-icon"><Icon /></div>
       <div className="pc-body">
         <div className="pc-name">{META[sectionKey].title}</div>
         <div className="pc-status">
           {status === 'done' && 'Complete'}
-          {status === 'generating' && 'Writing…'}
+          {status === 'generating' && 'Writing'}
           {status === 'pending' && 'Queued'}
           {status === 'error' && 'Failed'}
         </div>
       </div>
       <div className="pc-right">
-        {ACTIVE.has(status) && <div className="spinner" />}
-        {status === 'done' && <IconCheck width={18} height={18} style={{ color: 'var(--success)' }} />}
-        {status === 'error' && <IconAlert width={18} height={18} style={{ color: 'var(--danger)' }} />}
+        {status === 'generating' && <Waveform />}
+        {status === 'pending' && <div className="spinner" />}
+        {status === 'done' && <IconCheck className="check-pop" width={20} height={20} style={{ color: 'var(--sage)' }} />}
+        {status === 'error' && <IconAlert width={20} height={20} style={{ color: 'var(--rust)' }} />}
       </div>
     </div>
   )
@@ -94,6 +98,7 @@ export default function JobPage({ onJobUpdated }) {
       {/* Header */}
       <div className="guide-header">
         <div className="guide-header-text">
+          <div className="eyebrow">Narrator Preparation Guide</div>
           <h1 className="h-section">{job.title || 'Untitled'}</h1>
           <div className="guide-meta">
             {job.author && <span>by {job.author}</span>}
@@ -119,12 +124,12 @@ export default function JobPage({ onJobUpdated }) {
       {isGenerating && (
         <div>
           <div className="generating-notice">
-            <IconClock width={15} height={15} />
-            <span>Generating your guide — all six sections run in parallel. This takes 2–5 minutes depending on manuscript length.</span>
+            <Waveform />
+            <span>Writing your guide — all six sections run in parallel. This takes 2–5 minutes depending on manuscript length.</span>
           </div>
           <div className="stack">
-            {ORDER.map(k => (
-              <ProgressCard key={k} sectionKey={k} data={sections[k] || { status: 'pending' }} />
+            {ORDER.map((k, i) => (
+              <ProgressCard key={k} sectionKey={k} data={sections[k] || { status: 'pending' }} index={i} />
             ))}
           </div>
         </div>
@@ -179,6 +184,7 @@ export default function JobPage({ onJobUpdated }) {
           {/* Bottom download CTA */}
           {ORDER.every(k => sections[k]?.status === 'done') && (
             <div className="bottom-cta">
+              <div className="bottom-cta-note">Guide complete — six of six sections</div>
               <button className="btn btn-accent btn-download" onClick={handleExport} disabled={exporting}>
                 <IconDownload width={16} height={16} />
                 {exporting ? 'Preparing PDF…' : 'Download Guide as PDF'}
@@ -201,8 +207,8 @@ export default function JobPage({ onJobUpdated }) {
 function SkeletonPage() {
   return (
     <div>
-      <div className="skeleton skel-line w-40" style={{ height: 26, marginBottom: 8 }} />
-      <div className="skeleton skel-line w-60" style={{ height: 13, marginBottom: 32 }} />
+      <div className="skeleton skel-on-dark skel-line w-40" style={{ height: 26, marginBottom: 8 }} />
+      <div className="skeleton skel-on-dark skel-line w-60" style={{ height: 13, marginBottom: 32 }} />
       <div className="stack">
         {[0, 1, 2, 3, 4, 5].map(i => (
           <div className="card progress-card" key={i}>
