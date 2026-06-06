@@ -102,11 +102,11 @@ async def regenerate_section(
     async def _regen():
         rag = retrieve_examples(job["manuscript_text"][:3000], section_key)
         if section_key == "chapter_summary":
-            await _generate_chapter_summary(job, job["chapters"], rag)
+            await _generate_chapter_summary(job, job["chapters"], rag, custom_instructions)
         elif section_key == "pronunciation_guide":
-            await _generate_pronunciation(job, rag)
+            await _generate_pronunciation(job, rag, custom_instructions)
         else:
-            await _generate_section(job, section_key, job["manuscript_text"], rag)
+            await _generate_section(job, section_key, job["manuscript_text"], rag, custom_instructions)
 
     background_tasks.add_task(_regen)
     return {"ok": True, "status": "regenerating"}

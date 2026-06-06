@@ -84,3 +84,22 @@ Edit `CLAUDE_MODEL` in your `.env` file:
 ```bash
 make test
 ```
+
+## Troubleshooting
+
+**Every section shows "Error" / "Your credit balance is too low"**
+Your Anthropic account has no credit. Go to **console.anthropic.com → Plans & Billing** and add credit, then click **Regenerate** on each section. The app now shows the exact API error inside each section so you always know what's wrong.
+
+**"vite: command not found"**
+The frontend packages aren't installed. Run `cd frontend && npm install`.
+
+**WeasyPrint / `libgobject-2.0-0` error on macOS**
+Install the native graphics library: `brew install pango`.
+
+## Cost note
+
+By default this uses `claude-opus-4-8` (highest quality). A full guide is 5 long generations per book, so Opus can get expensive. To cut cost ~5× with near-identical quality, set this in `.env` and restart:
+
+```
+CLAUDE_MODEL=claude-sonnet-4-6
+```
