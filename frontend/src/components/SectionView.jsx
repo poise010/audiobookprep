@@ -1,13 +1,31 @@
+import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { SECTION_ICONS, IconAlert, IconFlag } from './icons'
+import { SECTION_ICONS, IconAlert, IconFlag, IconRefresh } from './icons'
 import PronunciationTable from './PronunciationTable'
+import Waveform from './Waveform'
 
 const ACTIVE = new Set(['pending', 'generating'])
 
-export default function SectionView({ sectionKey, meta, content, status, pronunciationEntries }) {
+export default function SectionView({ sectionKey, meta, content, status, pronunciationEntries, onRegenerate }) {
   const Icon = SECTION_ICONS[sectionKey]
   const busy = ACTIVE.has(status)
+  const [showRegen, setShowRegen] = useState(false)
+  const [instructions, setInstructions] = useState('')
+  const [regenLoading, setRegenLoading] = useState(false)
+
+  const wordCount = content ? content.trim().split(/\s+/).filter(Boolean).length : 0
+
+  const handleRegen = async () => {
+    setRegenLoading(true)
+    try {
+      await onRegenerate(sectionKey, instructions)
+      setShowRegen(false)
+      setInstructions('')
+    } finally {
+      setRegenLoading(false)
+    }
+  }
 
   return (
     <div className="card section-card">
@@ -17,13 +35,48 @@ export default function SectionView({ sectionKey, meta, content, status, pronunc
           <div className="section-head-eyebrow">{meta.eyebrow}</div>
           <div className="section-head-title">{meta.title}</div>
         </div>
-        {busy && <span className="spinner" />}
-        {status === 'error' && !busy && (
-          <span className="section-head-badge error">
-            <IconAlert width={13} height={13} /> Error
-          </span>
-        )}
+        <div className="section-head-right">
+          {!busy && status !== 'error' && wordCount > 0 && (
+            <span className="section-word-count">{wordCount.toLocaleString()} words</span>
+          )}
+          {busy && <Waveform />}
+          {status === 'error' && !busy && (
+            <span className="section-head-badge error">
+              <IconAlert width={13} height={13} /> Error
+            </span>
+          )}
+          {!busy && onRegenerate && (
+            <button
+              className={`btn btn-ghost btn-sm regen-btn ${showRegen ? 'regen-btn--open' : ''}`}
+              onClick={() => setShowRegen(v => !v)}
+              title="Regenerate this section"
+            >
+              <IconRefresh width={13} height={13} />
+              <span>Regenerate</span>
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Inline regenerate panel */}
+      {showRegen && (
+        <div className="regen-panel">
+          <div className="regen-panel-label">Custom instructions <span className="regen-panel-optional">(optional)</span></div>
+          <textarea
+            className="regen-textarea"
+            rows={2}
+            placeholder='E.g. "Focus on dialect notes for the Scottish characters" or leave blank to regenerate with default settings.'
+            value={instructions}
+            onChange={e => setInstructions(e.target.value)}
+          />
+          <div className="regen-panel-actions">
+            <button className="btn btn-accent btn-sm" onClick={handleRegen} disabled={regenLoading}>
+              {regenLoading ? <><span className="spinner" style={{ width: 12, height: 12 }} /> Queuing…</> : <><IconRefresh width={13} height={13} /> Regenerate Section</>}
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => { setShowRegen(false); setInstructions('') }}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       <div className="section-body">
         {busy ? (
@@ -37,11 +90,11 @@ export default function SectionView({ sectionKey, meta, content, status, pronunc
           </div>
         ) : status === 'error' ? (
           <div className="section-error">
-            <IconAlert width={20} height={20} style={{ color: 'var(--danger)', flexShrink: 0 }} />
+            <IconAlert width={20} height={20} style={{ color: 'var(--rust)', flexShrink: 0 }} />
             <div>
               <div className="section-error-title">This section couldn't be generated</div>
               <div className="section-error-msg">
-                Please try downloading your guide. If the problem persists, contact support.
+                Use the Regenerate button above to try again. If the problem persists, contact support.
               </div>
             </div>
           </div>

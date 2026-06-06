@@ -61,10 +61,12 @@ export default function JobPage({ onJobUpdated }) {
     try { setJob(await api.getJob(jobId)) } catch {}
   }, [jobId])
 
-  useEffect(() => { setJob(null); fetchJob() }, [jobId, fetchJob])
+  useEffect(() => { setJob(null); setActive('plot_summary'); fetchJob() }, [jobId, fetchJob])
 
   useEffect(() => {
-    if (!job || !ACTIVE.has(job.status)) { if (job) onJobUpdated?.(); return }
+    if (!job) return
+    const sectionsBusy = job.sections && ORDER.some(k => ACTIVE.has(job.sections[k]?.status))
+    if (!ACTIVE.has(job.status) && !sectionsBusy) { onJobUpdated?.(); return }
     const t = setInterval(fetchJob, 2000)
     return () => clearInterval(t)
   }, [job, fetchJob, onJobUpdated])
@@ -88,10 +90,23 @@ export default function JobPage({ onJobUpdated }) {
     }
   }
 
+  const handleRegenerate = async (sectionKey, customInstructions) => {
+    try {
+      await api.regenerateSection(jobId, sectionKey, customInstructions)
+      fetchJob()
+      showToast('Section queued for regeneration')
+    } catch (e) {
+      showToast('Regeneration failed. Please try again.', 'error')
+    }
+  }
+
   if (!job) return <SkeletonPage />
 
   const isGenerating = ACTIVE.has(job.status)
   const sections = job.sections || {}
+
+  const doneSections = ORDER.filter(k => sections[k]?.status === 'done').length
+  const allDone = doneSections === ORDER.length
 
   return (
     <div>
@@ -110,6 +125,12 @@ export default function JobPage({ onJobUpdated }) {
                 <span>{job.page_count} pages</span>
               </>
             ) : null}
+            {isGenerating && (
+              <>
+                <span className="guide-meta-sep">·</span>
+                <span className="guide-meta-progress">{doneSections} of {ORDER.length} sections</span>
+              </>
+            )}
           </div>
         </div>
         {!isGenerating && job.status !== 'error' && (
@@ -154,23 +175,26 @@ export default function JobPage({ onJobUpdated }) {
       {!isGenerating && job.status !== 'error' && (
         <div>
           {/* Section navigation */}
-          <div className="section-nav">
-            {ORDER.map(k => {
-              const Icon = SECTION_ICONS[k]
-              const st = sections[k]?.status
-              return (
-                <button
-                  key={k}
-                  className={`nav-pill ${active === k ? 'active' : ''} ${st === 'error' ? 'has-error' : ''}`}
-                  onClick={() => setActive(k)}
-                >
-                  <Icon width={14} height={14} />
-                  <span>{META[k].title}</span>
-                  {st === 'error' && <span className="pill-dot status-error" />}
-                  {ACTIVE.has(st) && <span className="pill-dot status-generating" />}
-                </button>
-              )
-            })}
+          <div className="section-nav-wrap">
+            <div className="section-nav">
+              {ORDER.map(k => {
+                const Icon = SECTION_ICONS[k]
+                const st = sections[k]?.status
+                return (
+                  <button
+                    key={k}
+                    className={`nav-pill ${active === k ? 'active' : ''} ${st === 'error' ? 'has-error' : ''}`}
+                    onClick={() => setActive(k)}
+                  >
+                    <Icon width={14} height={14} />
+                    <span>{META[k].title}</span>
+                    {st === 'error' && <span className="pill-dot status-error" />}
+                    {ACTIVE.has(st) && <span className="pill-dot status-generating" />}
+                    {st === 'done' && active !== k && <span className="pill-dot status-done" />}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Active section */}
@@ -182,11 +206,12 @@ export default function JobPage({ onJobUpdated }) {
               content={sections[k]?.content || ''}
               status={sections[k]?.status}
               pronunciationEntries={k === 'pronunciation_guide' ? job.pronunciation_entries : undefined}
+              onRegenerate={handleRegenerate}
             />
           ))}
 
           {/* Bottom download CTA */}
-          {ORDER.every(k => sections[k]?.status === 'done') && (
+          {allDone && (
             <div className="bottom-cta">
               <div className="bottom-cta-note">Guide complete — six of six sections</div>
               <button className="btn btn-accent btn-download" onClick={handleExport} disabled={exporting}>
@@ -201,6 +226,7 @@ export default function JobPage({ onJobUpdated }) {
       {toast && (
         <div className={`toast ${toast.type}`}>
           {toast.type === 'success' && <IconCheck width={15} height={15} />}
+          {toast.type === 'error' && <IconAlert width={15} height={15} />}
           {toast.msg}
         </div>
       )}

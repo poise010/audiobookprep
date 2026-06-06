@@ -29,6 +29,8 @@ export default function UploadPage({ onJobCreated }) {
     } catch (e) { setError(e.message); setLoading(false) }
   }
 
+  const clearFile = () => { setFile(null); setTitle(''); setAuthor(''); setError('') }
+
   return (
     <div>
       <div className="page-head">
@@ -40,25 +42,36 @@ export default function UploadPage({ onJobCreated }) {
         </p>
       </div>
 
+      {/* Drop zone */}
       <div
-        className={`upload-zone ${dragOver ? 'drag-over' : ''}`}
+        className={`upload-zone ${dragOver ? 'drag-over' : ''} ${file ? 'has-file' : ''}`}
         onDragOver={e => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
-        onClick={() => !file && inputRef.current.click()}
+        onClick={() => inputRef.current.click()}
         role="button" tabIndex={0}
-        onKeyDown={e => (e.key === 'Enter' && !file) && inputRef.current.click()}
+        onKeyDown={e => e.key === 'Enter' && inputRef.current.click()}
       >
         <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }}
           onChange={e => handleFile(e.target.files[0])} />
         <div className="upload-icon">{file ? <IconFile /> : <IconUpload />}</div>
-        <div className="upload-title">{file ? file.name : 'Drop manuscript PDF here'}</div>
-        <div className="upload-sub">
-          {file ? `${(file.size / 1024 / 1024).toFixed(1)} MB · click to change` : 'or click to browse'}
-        </div>
+        {file ? (
+          <>
+            <div className="upload-title upload-title--file">{file.name}</div>
+            <div className="upload-sub">{(file.size / 1024 / 1024).toFixed(1)} MB · click to change</div>
+          </>
+        ) : (
+          <>
+            <div className="upload-title">Drop manuscript PDF here</div>
+            <div className="upload-sub">or click to browse — PDF only</div>
+          </>
+        )}
+      </div>
 
-        {file && (
-          <div className="upload-fields" onClick={e => e.stopPropagation()}>
+      {/* Metadata + actions — only shown after file selected */}
+      {file && (
+        <div className="upload-meta-card" style={{ animation: 'rise .4s cubic-bezier(.2,.7,.2,1) both' }}>
+          <div className="upload-meta-fields">
             <div className="field">
               <label>Book Title</label>
               <input value={title} onChange={e => setTitle(e.target.value)} placeholder="The Name of the Wind" />
@@ -68,22 +81,21 @@ export default function UploadPage({ onJobCreated }) {
               <input value={author} onChange={e => setAuthor(e.target.value)} placeholder="Patrick Rothfuss" />
             </div>
           </div>
-        )}
-      </div>
+          <div className="upload-actions">
+            <button className="btn btn-accent" onClick={handleSubmit} disabled={loading}>
+              {loading
+                ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Uploading…</>
+                : <><IconSparkle width={16} height={16} /> Generate Guide</>}
+            </button>
+            <button className="btn btn-ghost" onClick={clearFile} disabled={loading}>Clear</button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="error-banner" style={{ marginTop: 16 }}>
           <IconAlert className="eb-icon" />
-          <div><div className="eb-title">Couldn’t upload</div><div className="eb-msg">{error}</div></div>
-        </div>
-      )}
-
-      {file && (
-        <div className="upload-actions">
-          <button className="btn btn-accent" onClick={handleSubmit} disabled={loading}>
-            {loading ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Uploading…</> : <><IconSparkle width={16} height={16} /> Generate Guide</>}
-          </button>
-          <button className="btn btn-ghost" onClick={() => { setFile(null); setTitle(''); setAuthor(''); setError('') }}>Clear</button>
+          <div><div className="eb-title">Couldn't upload</div><div className="eb-msg">{error}</div></div>
         </div>
       )}
     </div>

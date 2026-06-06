@@ -47,4 +47,9 @@ export const api = {
     const res = await request('POST', `/jobs/${jobId}/export`)
     return res.blob()
   },
+
+  async regenerateSection(jobId, sectionKey, customInstructions = '') {
+    const res = await request('POST', `/jobs/${jobId}/sections/${sectionKey}/regenerate`, { custom_instructions: customInstructions })
+    return res.json()
+  },
 }
