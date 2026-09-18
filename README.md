@@ -1,5 +1,7 @@
 # AudiobookPrep Guide Generator
 
+For the new public marketing website, proposed memberships, Squarespace export, and future Studio landing page, see [website/README.md](website/README.md). The website runs independently of the guide generator below.
+
 Automated narrator preparation guide generator for AudiobookPrep.com.
 
 ## How It Works

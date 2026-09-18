@@ -1,0 +1,23 @@
+{
+  "folders": [{ "path": ".", "name": "AudiobookPrep website" }],
+  "settings": { "editor.tabSize": 2, "files.trimTrailingWhitespace": true },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Preview website",
+        "type": "shell",
+        "command": "npm run dev",
+        "isBackground": true,
+        "problemMatcher": [],
+      },
+      {
+        "label": "Check website",
+        "type": "shell",
+        "command": "npm run check",
+        "problemMatcher": [],
+        "group": { "kind": "build", "isDefault": true },
+      },
+    ],
+  },
+}
